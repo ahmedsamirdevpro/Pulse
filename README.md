@@ -8,6 +8,8 @@
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
 ![Clean Architecture](https://img.shields.io/badge/Clean%20Architecture-FF6B35?style=for-the-badge&logo=android&logoColor=white)
 ![Multi-Module](https://img.shields.io/badge/Multi--Module-0D47A1?style=for-the-badge&logo=android&logoColor=white)
+![Paging3](https://img.shields.io/badge/Paging%203-RemoteMediator-6200EA?style=for-the-badge&logo=android&logoColor=white)
+![Offline First](https://img.shields.io/badge/Offline--First-WorkManager-00C853?style=for-the-badge&logo=android&logoColor=white)
 
 **Stay Connected. Even Offline.** ⚡
 
@@ -18,8 +20,8 @@
 ---
 
 
-## ✨ Features
 
+## ✨ Features
 ### ⚡ Sync Engine (Offline-First)
 - **Pending posts** saved to Room and synced when online
 - **Pending likes** queued and processed on reconnection
@@ -33,16 +35,19 @@
 - Unread badge counter
 - Mark all as read with batch Firestore write
 
+### 📰 Feed
+- Real-time post timeline with **Paging 3** + **RemoteMediator** (Room as Single Source of Truth)
+- **Optimistic Like** — heart turns red instantly, reverts on failure
+- **Pull-to-Refresh** — swipe down to reload latest posts
+- **Feed Ranking Algorithm** — posts scored by likes, comments, reposts & recency
+- **prefetchDistance = 5** — next page loads before user reaches end
+- `@Immutable` models — zero unnecessary recompositions
+
 ### 🔐 Authentication
 - Email & Password registration and login via **Firebase Auth**
 - Persistent session with automatic auth state management
 - Input validation with real-time error feedback
 
-### 📰 Feed
-- Real-time post timeline with **Paging 3** infinite scroll
-- Like, repost, and comment interactions
-- Offline feed reading from **Room** local cache
-- Auto-refresh on network reconnection
 
 ### ✍️ Create Post
 - Rich text post creation (up to 280 characters)
@@ -66,6 +71,7 @@
 - Add and delete comments
 - Keyboard-aware layout with `imePadding`
 
+
 ---
 
 ## 🏗️ Architecture
@@ -74,7 +80,7 @@ Pulse is built with **Clean Architecture**, **MVVM**, and **Feature Modularizati
 
 ```
 ┌─────────────────────────────────────────────┐
-│              Presentation Layer              │
+│              Presentation Layer             │
 │   Screens (Compose) + ViewModels + States   │
 ├─────────────────────────────────────────────┤
 │               Domain Layer                  │
@@ -131,7 +137,8 @@ Pulse/
 | **Authentication** | Firebase Auth |
 | **Database** | Firebase Firestore (remote) + Room (local) |
 | **Storage** | Firebase Storage |
-| **Pagination** | Paging 3 |
+| **Pagination** | Paging 3 + RemoteMediator |
+| **Feed Ranking** | Custom Score Algorithm (likes + comments + recency) |
 | **Background Sync** | WorkManager |
 | **Image Loading** | Coil |
 | **Build System** | Gradle Convention Plugins |
@@ -181,9 +188,9 @@ syncManager.syncNow()
 
 1. Create a project at [Firebase Console](https://console.firebase.google.com)
 2. Enable:
-    - **Authentication** → Email/Password
-    - **Firestore Database** → Test Mode → `europe-west1`
-    - **Storage** → Test Mode
+   - **Authentication** → Email/Password
+   - **Firestore Database** → Test Mode → `europe-west1`
+   - **Storage** → Test Mode
 3. Download `google-services.json` → place in `app/`
 4. Add SHA-1:
 ```bash
@@ -231,6 +238,7 @@ git clone https://github.com/ahmedsamirdevpro/Pulse.git
 ---
 
 
+---
 
 ## 📋 Screens Overview
 

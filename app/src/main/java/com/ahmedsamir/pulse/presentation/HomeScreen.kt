@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -13,29 +16,32 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.ahmedsamir.pulse.core.ui.theme.PulseBorder
+import com.ahmedsamir.pulse.feature.notifications.presentation.NotificationsViewModel
 import com.ahmedsamir.pulse.navigation.BottomNavItem
 import com.ahmedsamir.pulse.navigation.Screen
-import com.ahmedsamir.pulse.feature.feed.presentation.FeedScreen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    rootNavController: NavHostController
-) {
+fun HomeScreen(rootNavController: NavController) {
+
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+    val notificationsUiState by notificationsViewModel.uiState.collectAsState()
+    val unreadCount = notificationsUiState.unreadCount
 
     val bottomNavItems = listOf(
         BottomNavItem.Home,
@@ -47,16 +53,11 @@ fun HomeScreen(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.background,
-                tonalElevation = androidx.compose.ui.unit.Dp.Unspecified
+                containerColor = MaterialTheme.colorScheme.background
             ) {
                 bottomNavItems.forEach { item ->
-                    val isSelected = currentDestination?.hierarchy?.any {
-                        it.route == item.route
-                    } == true
-
                     NavigationBarItem(
-                        selected = isSelected,
+                        selected = currentRoute == item.route,
                         onClick = {
                             bottomNavController.navigate(item.route) {
                                 popUpTo(bottomNavController.graph.findStartDestination().id) {
@@ -67,25 +68,34 @@ fun HomeScreen(
                             }
                         },
                         icon = {
-                            Icon(
-                                imageVector = if (isSelected) item.selectedIcon
-                                else item.unselectedIcon,
-                                contentDescription = item.label
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.label,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold
-                                else FontWeight.Normal
-                            )
+                            if (item is BottomNavItem.Notifications && unreadCount > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        ) {
+                                            Text(
+                                                text = if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = item.label
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label
+                                )
+                            }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            selectedIconColor = MaterialTheme.colorScheme.onBackground,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             indicatorColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     )
@@ -93,28 +103,30 @@ fun HomeScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { rootNavController.navigate(Screen.CreatePost.route) },
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Create Post",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
+            if (currentRoute == BottomNavItem.Home.route) {
+                FloatingActionButton(
+                    onClick = { rootNavController.navigate(Screen.CreatePost.route) },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Create Post",
+                        tint = Color.White
+                    )
+                }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         NavHost(
             navController = bottomNavController,
-            startDestination = Screen.Home.route,
+            startDestination = BottomNavItem.Home.route,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            composable(Screen.Home.route) {
-                FeedScreen(
+            composable(BottomNavItem.Home.route) {
+                com.ahmedsamir.pulse.feature.feed.presentation.FeedScreen(
                     onPostClick = { postId ->
                         rootNavController.navigate(Screen.PostDetail.createRoute(postId))
                     },
@@ -127,7 +139,7 @@ fun HomeScreen(
                 )
             }
 
-            composable(Screen.Search.route) {
+            composable(BottomNavItem.Search.route) {
                 com.ahmedsamir.pulse.feature.search.presentation.SearchScreen(
                     onProfileClick = { userId ->
                         rootNavController.navigate(Screen.Profile.createRoute(userId))
@@ -135,19 +147,21 @@ fun HomeScreen(
                 )
             }
 
-            composable(Screen.Notifications.route) {
+            composable(BottomNavItem.Notifications.route) {
                 com.ahmedsamir.pulse.feature.notifications.presentation.NotificationsScreen(
                     onProfileClick = { userId ->
                         rootNavController.navigate(Screen.Profile.createRoute(userId))
                     },
                     onPostClick = { postId ->
                         rootNavController.navigate(Screen.PostDetail.createRoute(postId))
-                    }
+                    },
+                    viewModel = notificationsViewModel
                 )
             }
 
-            composable(Screen.Profile.route) {
-                val currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            composable(BottomNavItem.Profile.route) {
+                val currentUserId =
+                    com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: ""
                 com.ahmedsamir.pulse.feature.profile.presentation.ProfileScreen(
                     userId = currentUserId,
                     onNavigateBack = {},
@@ -160,18 +174,5 @@ fun HomeScreen(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(title: String) {
-    androidx.compose.foundation.layout.Box(
-        contentAlignment = androidx.compose.ui.Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(
-            text = "$title — Coming Soon",
-            color = MaterialTheme.colorScheme.onBackground
-        )
     }
 }

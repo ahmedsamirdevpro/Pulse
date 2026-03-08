@@ -58,4 +58,5 @@ dependencies {
     implementation(libs.firebase.storage)
 
     implementation(libs.androidx.material.icons.extended)
+    implementation(project(":core:core-model"))
 }

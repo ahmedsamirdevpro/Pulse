@@ -1,5 +1,8 @@
 package com.ahmedsamir.pulse.core.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class Post(
     val id: String = "",
     val authorId: String = "",

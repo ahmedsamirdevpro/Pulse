@@ -1,9 +1,11 @@
 package com.ahmedsamir.pulse.feature.comments.data.repository
 
 import com.ahmedsamir.pulse.core.model.Comment
+import com.ahmedsamir.pulse.core.model.NotificationType
 import com.ahmedsamir.pulse.core.model.Resource
 import com.ahmedsamir.pulse.core.model.User
 import com.ahmedsamir.pulse.feature.comments.domain.repository.CommentsRepository
+import com.ahmedsamir.pulse.core.common.NotificationHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -17,7 +19,8 @@ import javax.inject.Inject
 
 class CommentsRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val notificationHelper: NotificationHelper
 ) : CommentsRepository {
 
     override fun getComments(postId: String): Flow<List<Comment>> = callbackFlow {
@@ -65,6 +68,17 @@ class CommentsRepositoryImpl @Inject constructor(
                     "commentsCount",
                     com.google.firebase.firestore.FieldValue.increment(1)
                 ).await()
+
+            val postDoc = firestore.collection("posts").document(postId).get().await()
+            val postAuthorId = postDoc.getString("authorId") ?: ""
+            if (postAuthorId.isNotEmpty()) {
+                notificationHelper.sendNotification(
+                    recipientId = postAuthorId,
+                    sender = author,
+                    type = NotificationType.COMMENT,
+                    postId = postId
+                )
+            }
 
             Resource.Success(comment)
         } catch (e: Exception) {

@@ -3,6 +3,7 @@ package com.ahmedsamir.pulse.feature.notifications.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ahmedsamir.pulse.core.model.Notification
+import com.ahmedsamir.pulse.feature.notifications.domain.repository.NotificationsRepository
 import com.ahmedsamir.pulse.feature.notifications.domain.usecase.GetNotificationsUseCase
 import com.ahmedsamir.pulse.feature.notifications.domain.usecase.MarkAllReadUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val getNotificationsUseCase: GetNotificationsUseCase,
-    private val markAllReadUseCase: MarkAllReadUseCase
+    private val markAllReadUseCase: MarkAllReadUseCase,
+    private val notificationsRepository: NotificationsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
@@ -44,6 +46,12 @@ class NotificationsViewModel @Inject constructor(
     fun markAllRead() {
         viewModelScope.launch {
             markAllReadUseCase()
+        }
+    }
+
+    fun markAsRead(notificationId: String) {
+        viewModelScope.launch {
+            notificationsRepository.markAsRead(notificationId)
         }
     }
 }

@@ -102,10 +102,7 @@ fun NotificationsScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No notifications yet",
-                        color = PulseGray
-                    )
+                    Text(text = "No notifications yet", color = PulseGray)
                 }
             }
 
@@ -119,7 +116,8 @@ fun NotificationsScreen(
                         NotificationItem(
                             notification = notification,
                             onProfileClick = onProfileClick,
-                            onPostClick = onPostClick
+                            onPostClick = onPostClick,
+                            onMarkAsRead = { id -> viewModel.markAsRead(id) }
                         )
                         Divider(
                             color = MaterialTheme.colorScheme.outline,
@@ -136,11 +134,13 @@ fun NotificationsScreen(
 private fun NotificationItem(
     notification: Notification,
     onProfileClick: (String) -> Unit,
-    onPostClick: (String) -> Unit
+    onPostClick: (String) -> Unit,
+    onMarkAsRead: (String) -> Unit
 ) {
     val bgColor = if (!notification.isRead)
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-    else MaterialTheme.colorScheme.background
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+    else
+        MaterialTheme.colorScheme.background
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -148,6 +148,7 @@ private fun NotificationItem(
             .fillMaxWidth()
             .background(bgColor)
             .clickable {
+                if (!notification.isRead) onMarkAsRead(notification.id)
                 if (notification.postId.isNotEmpty()) onPostClick(notification.postId)
                 else onProfileClick(notification.senderId)
             }
@@ -205,12 +206,24 @@ private fun NotificationItem(
                     }
                 },
                 fontSize = 14.sp,
+                fontWeight = if (!notification.isRead) FontWeight.SemiBold else FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = notification.createdAt.toFormattedDate(),
                 fontSize = 12.sp,
                 color = PulseGray
+            )
+        }
+
+        if (!notification.isRead) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = androidx.compose.foundation.shape.CircleShape
+                    )
             )
         }
     }

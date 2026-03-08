@@ -1,5 +1,8 @@
 package com.ahmedsamir.pulse.core.model
 
+import androidx.compose.runtime.Immutable
+import com.ahmedsamir.pulse.core.model.NotificationType
+@Immutable
 data class Notification(
     val id: String = "",
     val recipientId: String = "",
@@ -9,13 +12,13 @@ data class Notification(
     val postId: String = "",
     val message: String = "",
     val isRead: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
-)
-
-enum class NotificationType {
-    LIKE,
-    COMMENT,
-    FOLLOW,
-    REPOST,
-    MENTION
+    val createdAt: Long = 0L
+) {
+    fun getTypeFromString(typeStr: String): NotificationType {
+        return try {
+            NotificationType.valueOf(typeStr)
+        } catch (e: Exception) {
+            NotificationType.LIKE
+        }
+    }
 }

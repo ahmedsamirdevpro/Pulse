@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface FeedRepository {
     fun getFeed(): Flow<PagingData<Post>>
     fun getUserPosts(userId: String): Flow<PagingData<Post>>
-    suspend fun likePost(postId: String): Resource<Unit>
+    suspend fun likePost(postId: String, isLiked: Boolean): Resource<Unit>
     suspend fun unlikePost(postId: String): Resource<Unit>
     suspend fun repostPost(postId: String): Resource<Unit>
     suspend fun deletePost(postId: String): Resource<Unit>

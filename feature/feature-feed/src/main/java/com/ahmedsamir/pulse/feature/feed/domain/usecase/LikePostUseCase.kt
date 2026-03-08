@@ -8,7 +8,6 @@ class LikePostUseCase @Inject constructor(
     private val feedRepository: FeedRepository
 ) {
     suspend operator fun invoke(postId: String, isLiked: Boolean): Resource<Unit> {
-        return if (isLiked) feedRepository.unlikePost(postId)
-        else feedRepository.likePost(postId)
+        return feedRepository.likePost(postId, isLiked)
     }
 }

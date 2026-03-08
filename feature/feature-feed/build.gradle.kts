@@ -64,4 +64,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.coil.compose)
+
+    implementation("androidx.compose.material:material:1.7.6")
+
 }

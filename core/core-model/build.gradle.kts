@@ -22,4 +22,7 @@ android {
     }
 }
 
-dependencies {}
+dependencies {
+    implementation(libs.androidx.compose.bom)
+    implementation(libs.androidx.compose.runtime)
+}

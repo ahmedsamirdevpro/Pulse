@@ -1,5 +1,7 @@
 package com.ahmedsamir.pulse.feature.profile.data.repository
 
+import com.ahmedsamir.pulse.core.common.NotificationHelper
+import com.ahmedsamir.pulse.core.model.NotificationType
 import com.ahmedsamir.pulse.core.model.Resource
 import com.ahmedsamir.pulse.core.model.User
 import com.ahmedsamir.pulse.feature.profile.domain.repository.ProfileRepository
@@ -17,7 +19,8 @@ import javax.inject.Inject
 class ProfileRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage ,
+    private val notificationHelper: NotificationHelper
 ) : ProfileRepository {
 
     override fun getProfile(userId: String): Flow<User?> = callbackFlow {
@@ -103,6 +106,19 @@ class ProfileRepositoryImpl @Inject constructor(
                 .update("followingCount",
                     com.google.firebase.firestore.FieldValue.increment(1))
                 .await()
+
+            // ← Send notification
+            val senderDoc = firestore.collection("users")
+                .document(currentUserId).get().await()
+            val sender = senderDoc.toObject(com.ahmedsamir.pulse.core.model.User::class.java)
+
+            if (sender != null) {
+                notificationHelper.sendNotification(
+                    recipientId = userId,
+                    sender = sender,
+                    type = NotificationType.FOLLOW
+                )
+            }
 
             Resource.Success(Unit)
         } catch (e: Exception) {

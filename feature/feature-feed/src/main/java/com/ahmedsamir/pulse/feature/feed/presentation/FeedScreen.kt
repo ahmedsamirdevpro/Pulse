@@ -1,11 +1,14 @@
 package com.ahmedsamir.pulse.feature.feed.presentation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -25,7 +32,7 @@ import androidx.paging.compose.itemKey
 import com.ahmedsamir.pulse.core.ui.component.ErrorView
 import com.ahmedsamir.pulse.feature.feed.presentation.components.PostCard
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun FeedScreen(
     onPostClick: (String) -> Unit,
@@ -34,6 +41,22 @@ fun FeedScreen(
     viewModel: FeedViewModel = hiltViewModel()
 ) {
     val posts = viewModel.feedState.collectAsLazyPagingItems()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            viewModel.refresh()
+            posts.refresh()
+        }
+    )
+
+    val isEmpty by remember {
+        derivedStateOf {
+            posts.itemCount == 0 &&
+                    posts.loadState.refresh is LoadState.NotLoading
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -57,9 +80,10 @@ fun FeedScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .pullRefresh(pullRefreshState)
         ) {
             when {
-                posts.loadState.refresh is LoadState.Loading -> {
+                posts.loadState.refresh is LoadState.Loading && posts.itemCount == 0 -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
                         color = MaterialTheme.colorScheme.primary
@@ -75,8 +99,7 @@ fun FeedScreen(
                     )
                 }
 
-                posts.itemCount == 0 &&
-                        posts.loadState.refresh is LoadState.NotLoading -> {
+                isEmpty -> {
                     Text(
                         text = "No posts yet. Follow people to see their posts!",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -94,7 +117,9 @@ fun FeedScreen(
                             post?.let {
                                 PostCard(
                                     post = it,
-                                    onLikeClick = viewModel::toggleLike,
+                                    onLikeClick = { postId, isLiked ->
+                                        viewModel.toggleLike(postId, isLiked, it.likesCount)
+                                    },
                                     onCommentClick = onCommentClick,
                                     onRepostClick = { },
                                     onPostClick = onPostClick,
@@ -118,6 +143,14 @@ fun FeedScreen(
                     }
                 }
             }
+
+            PullRefreshIndicator(
+                refreshing = isRefreshing,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

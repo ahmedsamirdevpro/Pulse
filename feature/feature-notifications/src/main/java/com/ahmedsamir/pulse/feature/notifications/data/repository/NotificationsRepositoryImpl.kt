@@ -33,10 +33,49 @@ class NotificationsRepositoryImpl @Inject constructor(
             .whereEqualTo("recipientId", userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .limit(50)
-            .addSnapshotListener { snapshot, _ ->
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    android.util.Log.e("NotificationsRepo", "Error: ${error.message}")
+                    return@addSnapshotListener
+                }
+
                 val notifications = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(Notification::class.java)
+                    try {
+                        val data = doc.data ?: return@mapNotNull null
+
+                        val senderMap = data["sender"] as? Map<*, *>
+                        val sender = User(
+                            id = senderMap?.get("id") as? String ?: "",
+                            displayName = senderMap?.get("displayName") as? String ?: "",
+                            username = senderMap?.get("username") as? String ?: "",
+                            profileImageUrl = senderMap?.get("profileImageUrl") as? String ?: ""
+                        )
+
+                        val typeStr = data["type"] as? String ?: "LIKE"
+                        val type = try {
+                            NotificationType.valueOf(typeStr)
+                        } catch (e: Exception) {
+                            NotificationType.LIKE
+                        }
+
+                        Notification(
+                            id = data["id"] as? String ?: doc.id,
+                            recipientId = data["recipientId"] as? String ?: "",
+                            senderId = data["senderId"] as? String ?: "",
+                            sender = sender,
+                            type = type,
+                            postId = data["postId"] as? String ?: "",
+                            message = data["message"] as? String ?: "",
+                            isRead = data["isRead"] as? Boolean ?: false,
+                            createdAt = data["createdAt"] as? Long ?: 0L
+                        )
+                    } catch (e: Exception) {
+                        android.util.Log.e("NotificationsRepo", "Parse error: ${e.message}")
+                        null
+                    }
                 } ?: emptyList()
+
+                android.util.Log.d("NotificationsRepo", "Loaded ${notifications.size} notifications")
                 trySend(notifications)
             }
 
