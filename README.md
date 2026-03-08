@@ -1,4 +1,4 @@
-# 🚀 Pulse — Offline-First Social Network
+# Pulse — Offline-First Social Network
 
 <div align="center">
 
