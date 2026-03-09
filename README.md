@@ -31,7 +31,7 @@
 - `eventual consistency` pattern — same as production apps
 
 ### 🔔 Notifications
-- Real-time notifications for likes, comments, follows, reposts
+- Real-time push notifications via **OneSignal**
 - Unread badge counter
 - Mark all as read with batch Firestore write
 
@@ -125,23 +125,24 @@ Pulse/
 
 ## 🛠️ Tech Stack
 
-| Category | Technology |
-|---|---|
-| **Language** | Kotlin |
-| **UI** | Jetpack Compose + Material Design 3 |
-| **Architecture** | MVVM + Clean Architecture |
-| **Modularization** | Multi-module (Feature Modularization) |
-| **DI** | Hilt |
-| **Async** | Coroutines + Flow + StateFlow |
-| **Networking** | Retrofit2 + OkHttp3 |
-| **Authentication** | Firebase Auth |
-| **Database** | Firebase Firestore (remote) + Room (local) |
-| **Storage** | Firebase Storage |
-| **Pagination** | Paging 3 + RemoteMediator |
-| **Feed Ranking** | Custom Score Algorithm (likes + comments + recency) |
-| **Background Sync** | WorkManager |
-| **Image Loading** | Coil |
-| **Build System** | Gradle Convention Plugins |
+| Category               | Technology |
+|------------------------|---|
+| **Language**           | Kotlin |
+| **UI**                 | Jetpack Compose + Material Design 3 |
+| **Architecture**       | MVVM + Clean Architecture |
+| **Modularization**     | Multi-module (Feature Modularization) |
+| **DI**                 | Hilt |
+| **Async**              | Coroutines + Flow + StateFlow |
+| **Push Notifications** | OneSignal |
+| **Networking**         | Retrofit2 + OkHttp3 |
+| **Authentication**     | Firebase Auth |
+| **Database**           | Firebase Firestore (remote) + Room (local) |
+| **Storage**            | Firebase Storage |
+| **Pagination**         | Paging 3 + RemoteMediator |
+| **Feed Ranking**       | Custom Score Algorithm (likes + comments + recency) |
+| **Background Sync**    | WorkManager |
+| **Image Loading**      | Coil |
+| **Build System**       | Gradle Convention Plugins |
 
 ---
 
