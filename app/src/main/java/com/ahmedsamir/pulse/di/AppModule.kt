@@ -6,6 +6,8 @@ import com.ahmedsamir.pulse.core.common.Constants
 import com.ahmedsamir.pulse.core.common.DefaultDispatcherProvider
 import com.ahmedsamir.pulse.core.common.DispatcherProvider
 import com.ahmedsamir.pulse.core.common.NetworkMonitor
+import com.ahmedsamir.pulse.core.common.OneSignalApiKey
+import com.ahmedsamir.pulse.core.common.OneSignalAppId
 import com.ahmedsamir.pulse.core.database.PulseDatabase
 import com.ahmedsamir.pulse.core.network.interceptor.AuthInterceptor
 import com.google.firebase.auth.FirebaseAuth
@@ -22,10 +24,21 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import com.ahmedsamir.pulse.BuildConfig
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    @OneSignalAppId
+    fun provideOneSignalAppId(): String = BuildConfig.ONESIGNAL_APP_ID
+
+    @Provides
+    @Singleton
+    @OneSignalApiKey
+    fun provideOneSignalApiKey(): String = BuildConfig.ONESIGNAL_REST_API_KEY
 
     @Provides
     @Singleton

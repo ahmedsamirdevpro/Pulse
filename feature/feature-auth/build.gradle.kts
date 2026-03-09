@@ -58,4 +58,6 @@ dependencies {
     implementation(libs.firebase.storage)
 
     implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.onesignal)
 }

@@ -5,6 +5,7 @@ import com.ahmedsamir.pulse.core.model.User
 import com.ahmedsamir.pulse.feature.auth.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.onesignal.OneSignal
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -43,6 +44,7 @@ class AuthRepositoryImpl @Inject constructor(
             val uid = result.user?.uid ?: return Resource.Error("Login failed")
             val doc = firestore.collection("users").document(uid).get().await()
             val user = doc.toObject(User::class.java) ?: return Resource.Error("User not found")
+            OneSignal.login(uid)
             Resource.Success(user)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Login failed")
@@ -65,6 +67,7 @@ class AuthRepositoryImpl @Inject constructor(
                 email = email
             )
             firestore.collection("users").document(uid).set(user).await()
+            OneSignal.login(uid)
             Resource.Success(user)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Registration failed")
@@ -74,6 +77,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logout(): Resource<Unit> {
         return try {
             firebaseAuth.signOut()
+            OneSignal.logout()
             Resource.Success(Unit)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Logout failed")
